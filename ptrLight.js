@@ -25,6 +25,9 @@
             elem.parent().prepend('<div id="ptr-light-indicator"><div id="ptr-light-spinner"></div></div>');
             self.indicator = elem.parent().find('#ptr-light-indicator');
             self.spinner = elem.parent().find('#ptr-light-spinner');
+            self.doneTimeout = null;
+            self.inProgress = false;
+            self.inProgressTouchstart = false;
             self.indicatorHeight = self.indicator.outerHeight();
             $(elem).css({
                 'transform': "translateY(-" + self.indicatorHeight + "px)"
@@ -37,20 +40,21 @@
             var top = 0;
             self.isSpinning = false;
             self.elast = true;
-            self.windowDimension = elem.parent().outerHeight();
+            self.windowDimension = $(window).height();
             self.getTopTranslation = function(top) {
                 return (1.0 - (1.0 / ((top * 0.55 / self.windowDimension) + 1.0))) * self.windowDimension;
             }
             self.spinner.css('opacity', '0');
             elem.unbind('touchstart.' + pluginName);
             elem.on('touchstart.' + pluginName, function(ev) {
-                if (self.options.paused)
+                self.inProgressTouchstart = self.inProgress;
+                if (self.options.paused || self.inProgress)
                     return false;
                 fingerOffset = ev.originalEvent.touches[0].pageY - offsetTop
             });
             elem.unbind('touchmove.' + pluginName);
             elem.on('touchmove.' + pluginName, function(ev) {
-                if (self.options.paused)
+                if (self.inProgress || self.inProgressTouchstart || self.options.paused)
                     return false;
 
                 if (elem.position().top < 0 || (self.options.scrollingDom || elem.parent()).scrollTop() > 0 || document.body.scrollTop > 0) { // trigger refresh only if pulled from the top of the list
@@ -79,9 +83,11 @@
                         });
                     }
 
-                      var rotation = 360 * (top / self.options.pullThreshold);
-                      rotation = rotation > 360 ? 360 : parseInt(rotation,10);
-                      self.spinner.css({'transform': 'rotate('+ rotation +'deg)'});
+                    var rotation = 360 * (top / self.options.pullThreshold);
+                    rotation = rotation > 360 ? 360 : parseInt(rotation, 10);
+                    self.spinner.css({
+                        'transform': 'rotate(' + rotation + 'deg)'
+                    });
                 } else {
                     $(document.body).unbind('touchmove.' + pluginName);
                     self.elast = true;
@@ -89,11 +95,12 @@
             });
             elem.unbind('touchend.' + pluginName);
             elem.on('touchend.' + pluginName, function(ev) {
-                if (self.options.paused)
+                if (self.options.paused || self.inProgress)
                     return false;
 
                 if (top > 0) {
                     if (top > self.options.pullThreshold) {
+                        self.inProgress = true;
                         self.options.refresh.call(this, self);
                         self.spinner.addClass('rotateLoop');
                         self.isSpinning = true;
@@ -106,7 +113,10 @@
                             'transition': 'top 300ms ease'
                         });
                         if (self.options.spinnerTimeout) {
-                            setTimeout(function() {
+                            if (self.doneTimeout) {
+                                clearTimeout(self.doneTimeout);
+                            }
+                            self.doneTimeout = setTimeout(function() {
                                 self.done();
                             }, self.options.spinnerTimeout);
                         }
@@ -138,6 +148,10 @@
         done: function() {
             var self = this;
             var elem = self.elem;
+            if (self.doneTimeout) {
+                clearTimeout(self.doneTimeout);
+                self.doneTimeout = null;
+            }
             self.indicator.css({
                 'top': "-" + self.indicatorHeight + "px",
                 'transition': 'top 300ms ease'
@@ -158,6 +172,7 @@
                 });
                 $(document.body).unbind('touchmove.' + pluginName);
                 self.elast = true;
+                self.inProgress = false;
             }, 300);
         }
     };

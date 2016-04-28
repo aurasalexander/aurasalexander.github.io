@@ -1,18 +1,20 @@
 #ptr-light-indicator {
-    width: 25px;
-    height: 45px;
+    width: 35px;
+    height: 35px;
     margin: 0 auto;
+    padding: 15px 0;
     transform: translateY(0);
     position: relative;
-    top: -45px;
+    top: -35px;
     transition: transform 300ms ease;
 }
 #ptr-light-spinner {
     display: block;
-    height: 35px;
-    width: 35px;
+    height: 100%;
+    width: 100%;
     position: relative;
-    background: url('reload.svg'); /*by loading.io*/
+    background: url('reload.svg');
+    /*icon by loading.io*/
     background-size: contain;
 }
 .rotateLoop {

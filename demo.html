@@ -9,12 +9,15 @@
     <script>
         $(function() {
             $('#container').ptrLight({
-                'refresh': function(pull) {
-                    console.log('Released...');
-                    setTimeout(function(){
-                      pull.done();
-                    }, 3000);
-                }
+                'refresh': function(ptrLightInstance) {
+                    console.log('Updating...');
+                    setTimeout(function() {
+                        console.log('Updated!');
+                        ptrLightInstance.done();
+                    }, 2000);
+                },
+                pullThreshold: $(window).height() / 3,
+                maxPullThreshold: $(window).height()
             });
         });
     </script>
@@ -25,10 +28,10 @@
         }
 
         .content {
-          height: 100%;
-          max-width: 450px;
-          margin: 0 auto;
-          text-align: justify;
+            height: 100%;
+            max-width: 450px;
+            margin: 0 auto;
+            text-align: justify;
         }
     </style>
 </head>
